@@ -1,0 +1,6 @@
+base_packages:
+  - ansible
+  - git
+  - python
+git_repo_url: "file:///root/ansible"
+git_branch: "main"
