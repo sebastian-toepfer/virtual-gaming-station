@@ -1,0 +1,16 @@
+[Unit]
+Description=VFIO Peak vCPU Autoscaler (silent)
+After=libvirtd.service
+Wants=libvirtd.service
+
+[Service]
+ExecStart=/usr/local/bin/vfio-dynamic-cores.sh
+Restart=always
+RestartSec=3
+User=root
+Group=root
+CPUAffinity=0
+
+[Install]
+WantedBy=multi-user.target
+

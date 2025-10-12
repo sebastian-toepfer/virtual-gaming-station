@@ -28,12 +28,14 @@
     src: systemd/ansible-pull.service
     dest: /etc/systemd/system/ansible-pull.service
     mode: "0644"
+  notify: systemd-daemon-reload
 
 - name: install ansible-pull timer
   ansible.builtin.copy:
     src: systemd/ansible-pull.timer
     dest: /etc/systemd/system/ansible-pull.timer 
     mode: "0644"
+  notify: systemd-daemon-reload
 
 - meta: flush_handlers
 

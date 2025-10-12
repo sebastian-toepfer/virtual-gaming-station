@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+export LC_ALL=C
+
+trigger_vm="{{ vm_name }}"
+target_vm="debian-daphne"
+THRESHOLD="0.55"
+INTERVAL=10
+N=1
+REARM="0.20"
+M=6
+COOLDOWN_SEC=60
+
+normale_state() {
+  count=$(virsh -q vcpucount $target_vm --maximum)
+  virsh setvcpus $target_vm $count --live
+  virsh setvcpus $target_vm $count --guest
+}
+
+constrained_state() {
+  echo "need more power!"
+  virsh setvcpus $target_vm 2 --live
+}
+
+get_vcpu_times() {
+  virsh domstats "$trigger_vm" --vcpu 2>/dev/null \
+  | awk -F= '/^[[:space:]]*vcpu\.[0-9]+\.time=/{
+      split($1,a,"."); id=a[2]; gsub(/\r/,"",$2); print id" "$2
+    }' | sort -n
+}
+
+eligible=1
+high_streak=0
+low_streak=0
+last_action_ts=0
+
+declare -A last
+while read -r id time; do last["$id"]="$time"; done < <(get_vcpu_times)
+
+while true;
+do
+  t0_ns=$(date +%s%N)
+
+  sleep "$INTERVAL"
+
+  declare -A now
+  while read -r id time;
+  do
+    now["$id"]="$time";
+  done < <(get_vcpu_times)
+
+  t1_ns=$(date +%s%N)
+  dt_s=$(echo "scale=9; ($t1_ns - $t0_ns)/1000000000" | bc -l)
+  if [[ -z "$dt_s" || "$dt_s" = "0" ]];
+  then
+    dt_s="$INTERVAL";
+  fi
+
+  for id in "${!last[@]}";
+  do
+    if [[ -n "${now[$id]:-}" ]];
+    then
+      delta_ns=$(( ${now[$id]} - ${last[$id]} ))
+      if (( delta_ns < 0 ));
+      then
+        delta_ns=0;
+      fi
+
+      util=$(echo "scale=6; $delta_ns / ($dt_s * 1000000000)" | bc -l)
+      gt1=$(echo "$util > 1" | bc -l); lt0=$(echo "$util < 0" | bc -l)
+      if [[ "$gt1" -eq 1 ]];
+      then
+        util="1";
+      fi
+      if [[ "$lt0" -eq 1 ]];
+      then
+        util="0";
+      fi
+
+      util_cores["$id"]="$util"
+    fi
+  done
+
+  for id in "${!now[@]}";
+  do 
+    last["$id"]="${now[$id]}";
+  done
+
+  peak_id=""
+  peak_val="0"
+  for id in "${!util_cores[@]}";
+  do
+    if (( $(echo "${util_cores[$id]} > $peak_val" | bc -l) ));
+    then
+      peak_val="${util_cores[${id}]}"
+      peak_id="$id"
+    fi
+  done
+
+  if (( $(echo "$peak_val >= $THRESHOLD" | bc -l) ));
+  then
+    ((high_streak++)) || :
+    low_streak=0
+  else
+    high_streak=0
+    if (( $(echo "$peak_val <= $REARM" | bc -l) ));
+    then
+      ((low_streak++)) || :
+    else
+      low_streak=0
+    fi
+  fi
+
+  now_ts=$(date +%s)
+
+  if [[ $eligible -eq 0 && $low_streak -ge $M ]];
+  then
+    normale_state || true
+    eligible=1
+  fi
+
+  if [[ $eligible -eq 1 && $high_streak -ge $N ]];
+  then
+    if (( now_ts - last_action_ts >= COOLDOWN_SEC ));
+    then
+      constrained_state || true
+      last_action_ts=$now_ts
+      eligible=0
+    fi
+    high_streak=0
+  fi
+
+  unset util_cores
+  declare -A util_cores
+done
+

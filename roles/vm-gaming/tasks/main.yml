@@ -1,0 +1,22 @@
+---
+- name: install vfio-dynamic-cores script
+  ansible.builtin.template:
+    src: scripts/vfio-dynamic-cores.sh.j2
+    dest: /usr/local/bin/vfio-dynamic-cores.sh
+    mode: "0744"
+
+- name: install vfio-peak-autoscaler service
+  ansible.builtin.copy:
+    src: systemd/vfio-peak-autoscaler.service
+    dest: /etc/systemd/system/vfio-peak-autoscaler.service
+    mode: "0644"
+  notify: systemd-daemon-reload
+
+- meta: flush_handlers
+
+- name: enable vfio-peak-autoscaler service
+  ansible.builtin.systemd:
+    name: vfio-peak-autoscaler.service
+    enabled: true
+    state: started 
+  
