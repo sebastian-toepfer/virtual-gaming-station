@@ -2,5 +2,13 @@ base_packages:
   - ansible
   - git
   - python
+  - dropbear
+  - dropbear-scp
+  - bc
+  - htop
+  - tmux
+  - usbutils
+  - vi
+  - wget
 git_repo_url: "file:///root/ansible"
 git_branch: "main"

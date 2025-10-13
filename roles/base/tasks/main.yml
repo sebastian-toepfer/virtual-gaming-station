@@ -23,6 +23,13 @@
     update_cache: true
     state: present
 
+- name: install intel microcode
+  when: "'GenuineIntel' in ansible_processor"
+  ansible.builtin.pacman:
+    name:
+      - intel-ucode
+    state: present
+
 - name: install ansible-pull service
   ansible.builtin.template:
     src: systemd/ansible-pull.service.j2
