@@ -2,6 +2,10 @@
 - hosts: localhost
   connection: local
   become: false
+  vars:
+    ospool_name: kvmpool
+    datapool_name: datapool
+    backuppool_name: backuppool
 
   roles:
     - base

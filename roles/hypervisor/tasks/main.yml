@@ -9,3 +9,22 @@
      - swtpm
      - zfs-dkms
     state: present
+
+- name: create os volumes dataset
+  community.general.zfs:
+    name: "{{ ospool_name }}/volumes"
+    state: present
+
+- name: export os volumes dataset name
+  ansible.builtin.set_fact:
+    hypervisor_os_volumes_dataset_name: "{{ ospool_name }}/volumes"
+
+- name: create data volumes fileset
+  community.general.zfs:
+    name: "{{ datapool_name }}/volumes"
+    state: present
+
+- name: export data volumes dataset name
+  ansible.builtin.set_fact:
+    hypervisor_data_volumes_dataset_name: "{{ datapool_name }}/volumes"
+

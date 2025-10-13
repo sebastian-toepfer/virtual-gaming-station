@@ -6,7 +6,7 @@
 
 - name: create volume for os
   community.general.zfs:
-    name: kvmpool/volumes/{{ vm_name }}/disk01
+    name: "{{ hypervisor_os_volumes_dataset_name }}/{{ vm_name }}/disk01"
     state: present
     extra_zfs_properties:
       volsize: 128G
@@ -14,7 +14,7 @@
 
 - name: create volume for games
   community.general.zfs:
-    name: kvmpool/volumes/{{ vm_name }}/games01
+    name: "{{ hypervisor_os_volumes_dataset_name }}/{{ vm_name }}/games01"
     state: present
     extra_zfs_properties:
       volsize: 1.50T
@@ -22,12 +22,12 @@
 
 - name: create filsystem for datavolumes
   community.general.zfs:
-    name: datapool/volumes/{{ vm_name }}
+    name: "{{ hypervisor_data_volumes_dataset_name }}/{{ vm_name }}"
     state: present
 
 - name: create volume for home
   community.general.zfs:
-    name: datapool/volumes/{{ vm_name }}/home01
+    name: "{{ hypervisor_data_volumes_dataset_name }}/{{ vm_name }}/home01"
     state: present
     extra_zfs_properties:
       volsize: 128G
