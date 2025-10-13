@@ -1,0 +1,11 @@
+---
+- name: install kvm packages
+  ansible.builtin.pacman:
+    name:
+     - libvirt
+     - openvswitch
+     - qemu-base
+     - qemu-hw-usb-host
+     - swtpm
+     - zfs-dkms
+    state: present
