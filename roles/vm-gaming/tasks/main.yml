@@ -1,4 +1,38 @@
 ---
+- name: create filsystem for osvolumes
+  community.general.zfs:
+    name: kvmpool/volumes/{{ vm_name }}
+    state: present
+
+- name: create volume for os
+  community.general.zfs:
+    name: kvmpool/volumes/{{ vm_name }}/disk01
+    state: present
+    extra_zfs_properties:
+      volsize: 128G
+      refreservation: none
+
+- name: create volume for games
+  community.general.zfs:
+    name: kvmpool/volumes/{{ vm_name }}/games01
+    state: present
+    extra_zfs_properties:
+      volsize: 1.50T
+      refreservation: none
+
+- name: create filsystem for datavolumes
+  community.general.zfs:
+    name: datapool/volumes/{{ vm_name }}
+    state: present
+
+- name: create volume for home
+  community.general.zfs:
+    name: datapool/volumes/{{ vm_name }}/home01
+    state: present
+    extra_zfs_properties:
+      volsize: 128G
+      refreservation: none
+
 - name: install vfio-dynamic-cores script
   ansible.builtin.template:
     src: scripts/vfio-dynamic-cores.sh.j2
