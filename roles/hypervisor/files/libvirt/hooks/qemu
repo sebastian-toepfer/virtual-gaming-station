@@ -1,0 +1,55 @@
+#!/bin/bash
+#
+# Author: Sebastiaan Meijer (sebastiaan@passthroughpo.st)
+#
+# Copy this file to /etc/libvirt/hooks, make sure it's called "qemu".
+# After this file is installed, restart libvirt.
+# From now on, you can easily add per-guest qemu hooks.
+# Add your hooks in /etc/libvirt/hooks/qemu.d/vm_name/hook_name/state_name.
+# For a list of available hooks, please refer to https://www.libvirt.org/hooks.html
+#
+
+GUEST_NAME="$1"
+HOOK_NAME="$2"
+STATE_NAME="$3"
+MISC="${@:4}"
+
+BASEDIR="$(dirname $0)"
+
+#shared ....
+if [ $HOOK_NAME = 'prepare' ] && [ $STATE_NAME = 'begin' ] ; then
+  systemd-run --unit=vm-${GUEST_NAME}-inhibit \
+    --description="Block shutdown until ${GUEST_NAME} is poweroff" \
+    /usr/bin/systemd-inhibit \
+    --what=shutdown \
+    --mode=block \
+    --who="VM:${GUEST_NAME}" \
+    --why="guest is running" \
+    sleep \
+    infinity
+elif [ $HOOK_NAME = 'started' ]; then
+  /sbin/udevadm trigger -c add
+fi
+
+HOOKPATH="$BASEDIR/qemu.d/$GUEST_NAME/$HOOK_NAME/$STATE_NAME"
+
+set -e # If a script exits with an error, we should as well.
+
+# check if it's a non-empty executable file
+if [ -f "$HOOKPATH" ] && [ -s "$HOOKPATH"] && [ -x "$HOOKPATH" ]; then
+    eval \"$HOOKPATH\" "$@"
+elif [ -d "$HOOKPATH" ]; then
+    while read file; do
+        # check for null string
+        if [ ! -z "$file" ]; then
+          eval \"$file\" "$@"
+        fi
+    done <<< "$(find -L "$HOOKPATH" -maxdepth 1 -type f -executable -print | sort;)"
+fi
+
+if [ $HOOK_NAME = 'release' ]; then
+  rm -rf /tmp/libvirt/$GUEST_NAME
+  /usr/bin/systemctl stop vm-${GUEST_NAME}-inhibit
+  /usr/bin/systemctl poweroff
+fi
+

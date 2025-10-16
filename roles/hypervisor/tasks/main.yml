@@ -28,3 +28,11 @@
   ansible.builtin.set_fact:
     hypervisor_data_volumes_dataset_name: "{{ datapool_name }}/volumes"
 
+- name: create qemu hook file
+  ansible.builtin.copy:
+    src: libvirt/hooks/qemu
+    dest: /etc/libvirt/hooks/qemu
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
