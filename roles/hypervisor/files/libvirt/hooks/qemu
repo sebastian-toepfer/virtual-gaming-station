@@ -24,7 +24,7 @@ if [ $HOOK_NAME = 'prepare' ] && [ $STATE_NAME = 'begin' ] ; then
     --what=shutdown \
     --mode=block \
     --who="VM:${GUEST_NAME}" \
-    --why="guest is running" \
+    --why="vm ${GUEST_NAME} is running" \
     sleep \
     infinity
 elif [ $HOOK_NAME = 'started' ]; then
