@@ -36,3 +36,11 @@
     group: root
     mode: 'u=rwx,g=rx,o=rx'
 
+- name: create backup script to backup kvm volumes
+  ansible.builtin.template:
+    src: scripts/backup_kvm_volumes.j2
+    dest: /usr/local/bin/backup_kvm_volumes.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+

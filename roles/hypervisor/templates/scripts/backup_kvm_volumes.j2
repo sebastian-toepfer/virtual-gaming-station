@@ -1,0 +1,87 @@
+#!/bin/sh
+
+lock()
+{
+  if [[ -z "${UNDER_INHIBIT:-}" ]];
+  then
+    exec 9>/run/lock/backup.lock
+    flock -n 9 || { echo "backup is already running."; exit 1; }
+
+    export UNDER_INHIBIT=1
+    exec systemd-inhibit \
+      --what=shutdown \
+      --mode=block \
+      --who="backup:kvm-volumes" \
+      --why="Running backup of kvm-volumes" \
+      "$0" "$@"
+  fi
+}
+
+pool_import()
+{
+  zpool import {{ backuppool_name }} || true
+}
+
+send()
+{
+  volumes=$(zfs list -H -o name -t volume | grep -v backuppool)
+  for volume in $volumes
+  do
+    volume_name=$(echo $volume | cut -d / -f3-)
+    backup_volume=$(zfs list -H -o name -t volume -r {{ backuppool_name }} | grep $volume_name)
+    if [ $(echo $backup_volume | wc -c) -gt 1 ];
+    then
+      snapshots=$(zfs list -H -o name -t snapshot $volume | cut -d @ -f2)
+      cur_snap=''
+      latest_snap=''
+      for snapshot in $snapshots
+      do
+        if [ "$cur_snap" != "" ];
+        then
+          latest_snap=$cur_snap
+        fi
+        cur_snap=$(zfs list -H -o name -t snapshot -r $backup_volume | grep $snapshot | cut -d @ -f2)
+        if [ "$cur_snap" == "" ];
+        then
+          echo "backup $volume@$latest_snap to $volume@$snapshot"
+          zfs send -i $volume@$latest_snap $volume@$snapshot | zfs recv $backup_volume
+          retCode=$?
+          if [ $retCode -eq 0 ];
+          then
+            cur_snap=$snapshot
+            if [ $(echo $latest_snap | grep -E "^[0-9]{8}T[0-9]{4}$" | wc -c) -gt 1 ];
+            then
+              zfs destroy $volume@$latest_snap
+            fi
+          else
+            echo "backup not possible for $volume@$latest_snap"
+            exit
+          fi
+        fi
+      done
+    else
+      echo "init backup for $volume"
+    fi
+  done
+}
+
+pool_export()
+{
+  zpool export {{ backuppool_name }} 2>/dev/null || true
+}
+
+finish()
+{
+  if (( success == 1 ));
+  then
+    /usr/bin/systemd-run --quiet --on-active=5s /usr/bin/systemctl poweroff
+  fi
+}
+
+trap finish EXIT
+
+lock
+pool_import
+send
+pool_export
+success=1
