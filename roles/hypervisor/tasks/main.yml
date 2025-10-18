@@ -36,6 +36,14 @@
     group: root
     mode: 'u=rwx,g=rx,o=rx'
 
+- name: create qemu hook script to create snapshots
+  ansible.builtin.copy:
+    src: scripts/create_snapshot.sh
+    dest: /usr/local/bin/create_snapshot.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
 - name: create backup script to backup kvm volumes
   ansible.builtin.template:
     src: scripts/backup_kvm_volumes.j2
