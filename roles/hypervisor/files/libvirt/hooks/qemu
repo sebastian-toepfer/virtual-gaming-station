@@ -28,7 +28,7 @@ if [ $HOOK_NAME = 'prepare' ] && [ $STATE_NAME = 'begin' ] ; then
     sleep \
     infinity
 elif [ $HOOK_NAME = 'started' ]; then
-  /sbin/udevadm trigger -c add
+  /usr/bin/systemd-run --quiet --on-active=1s /usr/local/bin/libvirt_attach_usbdevs_to.sh ${GUEST_NAME}
 fi
 
 HOOKPATH="$BASEDIR/qemu.d/$GUEST_NAME/$HOOK_NAME/$STATE_NAME"
@@ -48,7 +48,7 @@ elif [ -d "$HOOKPATH" ]; then
 fi
 
 if [ $HOOK_NAME = 'release' ]; then
-  rm -rf /tmp/libvirt/$GUEST_NAME
+  /usr/bin/systemd-run --quiet --on-active=1s /usr/local/bin/libvirt_detach_usbdevs_from.sh ${GUEST_NAME}
   /usr/bin/systemctl stop vm-${GUEST_NAME}-inhibit
   /usr/bin/systemctl poweroff
 fi

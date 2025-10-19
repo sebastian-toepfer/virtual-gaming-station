@@ -52,3 +52,59 @@
     group: root
     mode: 'u=rwx,g=rx,o=rx'
 
+- name: create script to create libvirt usb devices
+  ansible.builtin.copy:
+    src: scripts/libvirt_create_usbdev.sh
+    dest: /usr/local/bin/libvirt_create_usbdev.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
+- name: create script to attach usb device to vm
+  ansible.builtin.copy:
+    src: scripts/libvirt_attach_usbdev_to.sh
+    dest: /usr/local/bin/libvirt_attach_usbdev_to.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
+- name: create script to attach usb devices to vm
+  ansible.builtin.copy:
+    src: scripts/libvirt_attach_usbdevs_to.sh
+    dest: /usr/local/bin/libvirt_attach_usbdevs_to.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
+- name: create script to remove libvirt usb device
+  ansible.builtin.copy:
+    src: scripts/libvirt_remove_usbdev.sh
+    dest: /usr/local/bin/libvirt_remove_usbdev.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
+- name: create script to remove libvirt usb device by port
+  ansible.builtin.copy:
+    src: scripts/libvirt_remove_usbport.sh
+    dest: /usr/local/bin/libvirt_remove_usbport.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
+- name: create script to detach usb device from vm
+  ansible.builtin.copy:
+    src: scripts/libvirt_detach_usbdev_from.sh
+    dest: /usr/local/bin/libvirt_detach_usbdev_from.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
+- name: create script to detach usb devices from vm
+  ansible.builtin.copy:
+    src: scripts/libvirt_detach_usbdevs_from.sh
+    dest: /usr/local/bin/libvirt_detach_usbdevs_from.sh
+    owner: root
+    group: root
+    mode: 'u=rwx,g=rx,o=rx'
+
