@@ -1,11 +1,8 @@
 #!/bin/sh
 
-if [ -n "${1}" ];
-then
-  LIBVIRT_USBDEV_DEF=/run/libvirt/usb/${1}/${2}.xml
-
-  /usr/local/bin/libvirt_detach_usbdev_from.sh ${1} ${2}
-
-  rm -rf ${LIBVIRT_USBDEV_DEF}
-fi
+PORT=$(echo $1 | rev | cut -d / -f1 | cut -d - -f1 | rev)
+for vm in /run/libvirt/usb/*;
+do
+  /usr/local/bin/libvirt_remove_usbdev_from.sh $(basename $vm) $1
+done
 

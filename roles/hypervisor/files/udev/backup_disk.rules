@@ -1,0 +1,1 @@
+ACTION=="add", SUBSYSTEM=="usb", ENV{ID_MODEL_ID}=="0562" RUN+="/usr/bin/systemd-run --unit=backup-kvm-volumes --collect --on-active=10s --property=Type=oneshot /usr/local/bin/backup_kvm_volumes.sh"
