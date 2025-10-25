@@ -52,3 +52,11 @@
     enabled: true
     state: started
 
+- name: create udev rules directory
+  ansible.builtin.file:
+    path: /etc/udev/rules.d
+    state: directory
+    owner: root
+    group: root
+    mode: "u=rx,g=r,o=r"
+
